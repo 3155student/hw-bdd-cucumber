@@ -25,9 +25,35 @@ end
 Then /I should see "(.*)" before "(.*)"/ do |e1, e2|
   #  ensure that that e1 occurs before e2.
   #  page.body is the entire content of the page as a string.
-  fail "Unimplemented"
+  
+  if page.respond_to? :should
+    expect(page.body =~/#{e1}.*#{e2}/m).to be >= 0
+  else
+    assert page.body =~ /#{e1}.*#{e2}/m
+  end  
+  # fail "Unimplemented"
 end
 
+Then /I should (not)?see movies with titles: (.*)/ do |not_see, titles|
+  titles.split(/,\s?/).each do |title|
+    if page.respond_to? :should
+      if !!not_see
+
+        page.should not(have_content(text))
+      else
+        page.should have_content(text)
+      end
+    
+    else
+      if !!not_see
+        assert !page.has_content?(text)
+      else
+        assert page.has_content?(text)
+      end
+    end
+  end
+  true
+end
 # Make it easier to express checking or unchecking several boxes at once
 #  "When I uncheck the following ratings: PG, G, R"
 #  "When I check the following ratings: G"
@@ -36,10 +62,26 @@ When /I (un)?check the following ratings: "(.*)"/ do |uncheck, rating_list|
   # HINT: use String#split to split up the rating_list, then
   #   iterate over the ratings and reuse the "When I check..." or
   #   "When I uncheck..." steps in lines 89-95 of web_steps.rb
-  fail "Unimplemented"
+  rating_list.split(/,\s*/).each do |field|
+    field = field.strip
+    if uncheck
+      uncheck("ratings_#{field}")
+      
+    else
+      check("ratings_#{field}")
+    end
+  end
 end
 
 Then /I should see all the movies/ do
   # Make sure that all the movies in the app are visible in the table
-  fail "Unimplemented"
+  movies = Movie.all
+  movies.each do |movie|
+    if page.respond_to? :should
+      page.should have_content(movie[:title])
+    else
+      assert page.has_content?(movie[:title])
+    end
+  end
+  true
 end
